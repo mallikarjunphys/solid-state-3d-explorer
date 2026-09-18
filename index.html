@@ -60,8 +60,223 @@ background:#071625dc;padding:5px 10px;border-radius:999px;border:1px solid #223b
 #planeCard b,#structureCard b{color:#e9f6ff}
 .formula{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#bfe5ff;font-size:11px;
 margin-top:6px;line-height:1.55}
-@media(max-width:900px){#left,#right{width:250px}.brand p{display:none}#info{display:none}}
-@media(max-width:650px){#right{display:none}#left{width:278px;top:63px}.topBtns{display:none}}
+
+/* ===== Mobile / narrow-screen layout ===== */
+@media (max-width: 760px){
+  html,body{
+    overflow:hidden;
+    width:100%;
+    height:100%;
+  }
+
+  #top{
+    left:9px;
+    right:9px;
+    top:8px;
+    align-items:flex-start;
+    gap:7px;
+    pointer-events:none;
+  }
+
+  .brand h1{
+    font-size:15px;
+    line-height:1.15;
+    max-width:190px;
+  }
+  .brand p{display:none}
+
+  .topBtns{
+    display:flex;
+    gap:4px;
+    flex-wrap:nowrap;
+    max-width:calc(100vw - 205px);
+    overflow-x:auto;
+    scrollbar-width:none;
+    pointer-events:auto;
+  }
+  .topBtns::-webkit-scrollbar{display:none}
+  .topBtns button{
+    flex:0 0 auto;
+    min-height:40px;
+    padding:7px 9px;
+    font-size:10px;
+  }
+
+  /* Side drawers: the 3D scene stays full-screen behind them. */
+  #left,#right{
+    display:block;
+    top:70px;
+    bottom:8px;
+    width:min(84vw,340px);
+    max-height:none;
+    padding:10px;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    background:rgba(7,20,35,.975);
+    border-radius:14px;
+    box-shadow:0 8px 32px rgba(0,0,0,.62);
+    z-index:9;
+    transition:transform .25s ease;
+    will-change:transform;
+    touch-action:pan-y;
+  }
+
+  #left{
+    left:8px;
+    right:auto;
+    transform:translateX(0);
+  }
+  #right{
+    right:8px;
+    left:auto;
+    transform:translateX(0);
+  }
+
+  /* Closed positions leave only the vertical grab bars visible. */
+  #left.mobile-closed{
+    transform:translateX(calc(-100% - 8px));
+  }
+  #right.mobile-closed{
+    transform:translateX(calc(100% + 8px));
+  }
+
+  #mobileControlsToggle{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:auto;
+    min-width:150px;
+    min-height:44px;
+    margin:0 0 7px 0;
+    padding:8px 14px;
+    background:#10263d;
+    border:1px solid #4f7394;
+    color:#eef7ff;
+    border-radius:10px;
+    font-weight:800;
+    cursor:pointer;
+  }
+
+  /* When the user presses Hide controls, the whole panel slides left. */
+  #left.mobile-controls-hidden{
+    transform:translateX(calc(-100% - 8px));
+  }
+
+  .mobile-panel-handle{
+    position:fixed;
+    top:50%;
+    transform:translateY(-50%);
+    z-index:100;
+    width:42px;
+    height:126px;
+    padding:0;
+    border:1px solid #34516e;
+    background:rgba(16,38,61,.96);
+    color:#dcecff;
+    border-radius:12px;
+    font-size:20px;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 4px 18px rgba(0,0,0,.45);
+    touch-action:none;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+
+  #leftHandle{left:0}
+  #rightHandle{right:0}
+
+  /* While a panel is open, its tab sits on the panel's exposed outer edge.
+     When closed, it returns to the screen edge. */
+  #leftHandle.drawer-open{left:calc(min(84vw,340px) + 8px)}
+  #rightHandle.drawer-open{right:calc(min(84vw,340px) + 8px)}
+
+  .mobile-panel-handle{
+    background:rgba(16,38,61,.99);
+    border:2px solid #4f7394;
+    cursor:pointer;
+  }
+
+  .mobile-panel-handle span{
+    display:block;
+    font-size:28px;
+    font-weight:800;
+    line-height:1;
+  }
+  .mobile-panel-handle::after{
+    content:'';
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:3px;
+    height:42px;
+    transform:translate(-50%,-50%);
+    border-radius:3px;
+    background:#6f8ca8;
+    opacity:.45;
+    pointer-events:none;
+  }
+  .mobile-panel-handle span{position:relative;z-index:1}
+
+  .section{
+    padding-top:9px;
+    margin-top:9px;
+  }
+  .sectionTitle{
+    font-size:10px;
+    margin-bottom:6px;
+  }
+  .small{font-size:11px}
+
+  button,select,input[type=number]{
+    min-height:44px;
+    font-size:14px;
+  }
+  input[type=number]{padding:9px 8px}
+  input[type=range]{height:36px}
+  .toggle{
+    min-height:40px;
+    margin:2px 0;
+    font-size:13px;
+  }
+  .toggle input{width:20px;height:20px}
+  .mode{
+    margin-bottom:5px;
+    text-align:center;
+  }
+  .presetGrid{gap:6px}
+  .presetGrid button{min-height:44px}
+  .row3{gap:6px}
+  #planeCard,#structureCard{font-size:11px}
+
+  /* Keep the center information unobtrusive on phones. */
+  #info,#hint{display:none}
+}
+
+@media (max-width:430px){
+  .brand h1{font-size:14px;max-width:175px}
+  .topBtns{max-width:47vw}
+  .topBtns button{min-width:42px;padding:7px;font-size:9px}
+  #left,#right{
+    width:min(86vw,320px);
+    top:66px;
+    bottom:6px;
+  }
+  .mobile-panel-handle{
+    width:38px;
+    height:112px;
+  }
+  #leftHandle.drawer-open{left:calc(min(86vw,320px) + 6px)}
+  #rightHandle.drawer-open{right:calc(min(86vw,320px) + 6px)}
+}
+
+/* ===== Desktop remains unchanged ===== */
+@media (min-width:761px){
+  .mobile-panel-handle{display:none}
+  #mobileControlsToggle{display:none}
+}
 </style>
 </head>
 <body>
@@ -81,6 +296,7 @@ margin-top:6px;line-height:1.55}
 </div>
 
 <div id="left">
+ <button id="mobileControlsToggle" type="button" aria-expanded="true">Hide controls ▲</button>
  <div class="section" style="margin-top:0;padding-top:0;border-top:0">
   <div class="sectionTitle">Crystal structure</div>
   <select id="structure">
@@ -112,7 +328,7 @@ margin-top:6px;line-height:1.55}
   <label class="toggle"><input id="neighbors" type="checkbox"> Nearest neighbours</label>
   <label class="toggle"><input id="axes" type="checkbox" checked> Axes</label>
   <label class="toggle"><input id="planeToggle" type="checkbox" checked> Miller plane</label>
-  <label class="toggle"><input id="directionToggle" type="checkbox"> Miller direction</label>
+  <label class="toggle"><input id="directionToggle" type="checkbox"> Miller plane direction [hkl] (normal)</label>
  </div>
 
  <div class="section">
@@ -134,21 +350,22 @@ margin-top:6px;line-height:1.55}
  </div>
 
  <div class="section">
-  <div class="sectionTitle">Miller direction [u v w]</div>
+  <div class="sectionTitle">Arbitrary Miller direction [u v w]</div>
   <div class="row3">
    <input id="u" type="number" value="1" step="1">
    <input id="v" type="number" value="1" step="1">
    <input id="w" type="number" value="0" step="1">
   </div>
-  <button id="directionBtn" style="width:100%;margin-top:7px">Show direction</button>
+  <button id="directionBtn" style="width:100%;margin-top:7px">Show [uvw] direction</button>
  </div>
 </div>
 
 <div id="right">
  <div class="section" style="border-top:0;margin-top:0;padding-top:0">
   <div class="sectionTitle">Appearance</div>
-  <div class="small">Atom size <span id="atomVal" class="rangeVal">0.110</span></div>
-  <input id="atomSize" type="range" min=".045" max=".15" value=".095" step=".005">
+  <div class="small">At 100%, nearest-neighbour atoms exactly touch.</div>
+  <div class="small">Atom size <span id="atomVal" class="rangeVal">75%</span></div>
+  <input id="atomSize" type="range" min=".20" max="1" value=".75" step=".01" aria-label="Atom size">
   <div class="small">Plane opacity <span id="planeVal" class="rangeVal">0.42</span></div>
   <input id="planeOpacity" type="range" min=".15" max=".75" value=".42" step=".01">
   <div class="small">Neighbour-cell opacity <span id="neighborVal" class="rangeVal">0.20</span></div>
@@ -164,7 +381,7 @@ margin-top:6px;line-height:1.55}
    <div style="margin:7px 0">■ <span style="color:#b37bff">Miller plane (hkl)</span></div>
    <div style="margin:7px 0">✚ <span style="color:#ffff66">Plane intercept marker (not an atom)</span></div>
    <div style="margin:7px 0">➜ <span style="color:#ffa63d">Miller direction [uvw]</span></div>
-   <div style="margin:7px 0">➜ <span style="color:#ffffff">Plane normal n</span></div>
+   <div style="margin:7px 0">⊥ <span style="color:#ffffff">Plane normal of (hkl)</span></div>
    <div style="margin:7px 0">━ <span style="color:#ff8e9d">x</span> / <span style="color:#8af2b0">y</span> / <span style="color:#82c2ff">z</span> crystal axes</div>
   </div>
  </div>
@@ -190,6 +407,11 @@ margin-top:6px;line-height:1.55}
   </div>
  </div>
 </div>
+
+<button id="leftHandle" class="mobile-panel-handle" type="button"
+ aria-label="Open or close controls panel" aria-expanded="true"><span>‹</span></button>
+<button id="rightHandle" class="mobile-panel-handle" type="button"
+ aria-label="Open or close appearance panel" aria-expanded="true"><span>›</span></button>
 
 <div id="hint">Drag = rotate • Wheel = zoom • Right-drag = pan</div>
 <div id="info">
@@ -224,14 +446,18 @@ document.body.appendChild(renderer.domElement);
 
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.075;controls.target.set(0,0,0);
+controls.rotateSpeed=.65;
+controls.zoomSpeed=.85;
+controls.panSpeed=.65;
+renderer.domElement.style.touchAction='none';
 
 scene.add(new THREE.HemisphereLight(0xd9ecff,0x142236,1.7));
 const key=new THREE.DirectionalLight(0xffffff,2.25);key.position.set(6,9,7);scene.add(key);
 const fill=new THREE.DirectionalLight(0x74b9ff,.7);fill.position.set(-5,3,-5);scene.add(fill);
 
 const atomG=new THREE.Group(),edgeG=new THREE.Group(),cellG=new THREE.Group(),planeG=new THREE.Group();
-const dirG=new THREE.Group(),axisG=new THREE.Group(),neighborG=new THREE.Group(),interceptG=new THREE.Group();
-scene.add(atomG,edgeG,cellG,planeG,dirG,axisG,neighborG,interceptG);
+const dirG=new THREE.Group(),userDirG=new THREE.Group(),axisG=new THREE.Group(),neighborG=new THREE.Group(),interceptG=new THREE.Group();
+scene.add(atomG,edgeG,cellG,planeG,dirG,userDirG,axisG,neighborG,interceptG);
 
 const A=2.8;
 let structure='fcc',N=3,isolate=false;
@@ -260,6 +486,19 @@ function txt(text,color='#ffffff',size=.30){
  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false}));
  s.scale.set(size*4,size,1);return s;
 }
+function nearestNeighbourDistance(type){
+ // Nearest-neighbour centre distance for a conventional cubic cell.
+ if(type==='bcc')return A*Math.sqrt(3)/2;
+ if(type==='fcc')return A/Math.sqrt(2);
+ return A; // simple cubic
+}
+
+function atomRadius(){
+ // 100% means r = dNN/2, so nearest-neighbour atoms exactly touch.
+ const f=Math.max(.20,Math.min(1,+document.getElementById('atomSize').value||.75));
+ return nearestNeighbourDistance(structure)*.5*f;
+}
+
 function structureSites(type){
  const c=[[0,0,0],[1,0,0],[0,1,0],[1,1,0],[0,0,1],[1,0,1],[0,1,1],[1,1,1]];
  if(type==='sc')return c;
@@ -302,7 +541,7 @@ function buildCrystal(){
       !(s[0]===1&&s[1]===0&&s[2]===1) &&
       !(s[0]===0&&s[1]===1&&s[2]===1) &&
       !(s[0]===1&&s[1]===1&&s[2]===1)) color=0x63c4ff;
-   const m=atom(pos,A*+document.getElementById('atomSize').value,color,opacity);
+   const m=atom(pos,atomRadius(),color,opacity);
    atomG.add(m);if(opacity>.5)positions.push(pos);if(inCell)cellAtoms.push(pos);
   }
  }
@@ -323,16 +562,77 @@ function buildCrystal(){
  }
 
  if(document.getElementById('neighbors').checked){
+  /*
+   * Show neighbours of ONE representative atom in the highlighted cell.
+   * SC  = highlighted-cell corner
+   * BCC = body-centred atom
+   * FCC = one face-centred atom
+   *
+   * Search surrounding cells so neighbours across a unit-cell boundary
+   * are included even when only 1 or 2 cells are displayed.
+   */
+  const b=cellBounds(),cellMin=b.min,cellMax=b.max,mid=(cellMin+cellMax)/2;
+  const idx=b.index;
+  let ref;
+
+  if(structure==='bcc'){
+   ref=new THREE.Vector3(mid,mid,mid);
+  }else if(structure==='fcc'){
+   ref=new THREE.Vector3(mid,mid,cellMin);
+  }else{
+   ref=new THREE.Vector3(cellMin,cellMin,cellMin);
+  }
+
+  const local=[];
+  const sites=structureSites(structure);
+
+  for(let i=idx-1;i<=idx+1;i++)for(let j=idx-1;j<=idx+1;j++)for(let k=idx-1;k<=idx+1;k++){
+   for(const s of sites){
+    const fx=i+s[0],fy=j+s[1],fz=k+s[2];
+    local.push(new THREE.Vector3(
+     (fx-N/2)*A,(fy-N/2)*A,(fz-N/2)*A
+    ));
+   }
+  }
+
+  const unique=[],seenNN=new Set();
+  for(const p of local){
+   const key=latticePointKey(p.x,p.y,p.z);
+   if(!seenNN.has(key)){seenNN.add(key);unique.push(p);}
+  }
+
   let minD=Infinity;
-  for(let i=0;i<positions.length;i++)for(let j=i+1;j<positions.length;j++){
-   const d=positions[i].distanceTo(positions[j]);if(d>1e-4)minD=Math.min(minD,d);
+  for(const p of unique){
+   const d=ref.distanceTo(p);
+   if(d>1e-4)minD=Math.min(minD,d);
   }
-  for(let i=0;i<positions.length;i++)for(let j=i+1;j<positions.length;j++){
-   const d=positions[i].distanceTo(positions[j]);
-   if(Math.abs(d-minD)<A*.035)neighborG.add(line(positions[i],positions[j],0xffd166,.45));
+
+  let neighbourCount=0;
+  for(const p of unique){
+   const d=ref.distanceTo(p);
+   if(d>1e-4 && Math.abs(d-minD)<A*.035){
+    neighborG.add(line(ref,p,0xffd166,.9));
+    neighbourCount++;
+   }
   }
- }
-}
+
+  // Small ring = selected atom; it does not obscure the atom itself.
+  const ring=new THREE.Mesh(
+   new THREE.TorusGeometry(A*.15,A*.025,10,32),
+   new THREE.MeshBasicMaterial({color:0xffff66,transparent:true,opacity:.98})
+  );
+  ring.position.copy(ref);
+  ring.quaternion.copy(camera.quaternion);
+  neighborG.add(ring);
+
+  const tag=txt('reference atom','#fff3a3',.22);
+  tag.position.copy(ref).add(new THREE.Vector3(0,A*.23,0));
+  neighborG.add(tag);
+
+  const countTag=txt('NN = '+neighbourCount,'#ffd166',.20);
+  countTag.position.copy(ref).add(new THREE.Vector3(0,-A*.22,0));
+  neighborG.add(countTag);
+ }}
 
 function buildUnitCell(){
  clear(cellG);clear(axisG);
@@ -454,12 +754,12 @@ function buildPlane(){
  const tag=txt(planeLabel(h,k,l),'#e8d1ff',.36);
  tag.position.copy(center).add(normal.clone().multiplyScalar(A*.12));
  planeG.add(tag);
- // normal vector — visually ties the plane's tilt to its [hkl] indices
- planeG.add(new THREE.ArrowHelper(normal.clone(),center,A*.55,0xffffff,.13,.075));
- const nTag=txt('n = ['+h+','+k+','+l+']','#ffffff',.24);
- nTag.position.copy(center).add(normal.clone().multiplyScalar(A*.68));
- planeG.add(nTag);
-
+ /*
+  (hkl) defines the Miller plane. For a cubic crystal its geometric normal
+  is parallel to [hkl], but it is NOT the separately selected Miller
+  direction [uvw]. The plane therefore does not draw a direction arrow.
+  The [uvw] arrow is created only by buildDirection().
+ */
  // Highlight exact axis intercept points of the standard member D=result.D.
  if(document.getElementById('intercepts').checked){
   const D=result.D;
@@ -499,7 +799,7 @@ function buildPlane(){
 
  const standard=`${h}x + ${k}y + ${l}z = ${result.D}a`;
  document.getElementById('planeSummary').innerHTML=`Plane: <b>${planeLabel(h,k,l)}</b>`;
- let details=`Normal direction: <b>[${h}${k}${l}]</b><br>Representative family member: <b>n = ${result.D}</b><br>`;
+ let details=`Plane normal (cubic): parallel to <b>[${h}${k}${l}]</b><br>Representative family member: <b>n = ${result.D}</b><br>`;
  details+=`Intercepts of this member: `;
  const arrI=[];if(h)arrI.push(`x = ${result.D}a/${h}`);if(k)arrI.push(`y = ${result.D}a/${k}`);if(l)arrI.push(`z = ${result.D}a/${l}`);
  details+=arrI.join(', ');
@@ -507,21 +807,78 @@ function buildPlane(){
  document.getElementById('planeDetails').innerHTML=details;
  document.getElementById('planeEquation').textContent=standard;
  document.getElementById('learning').innerHTML=
-   `For a cubic lattice, <b>${planeLabel(h,k,l)}</b> is a family of parallel planes whose normal is parallel to `+
-   `<b>[${h}${k}${l}]</b>. Interplanar spacing for the reduced indices is `+
+   `For a cubic lattice, <b>${planeLabel(h,k,l)}</b> is a family of parallel planes. `+
+   `Its normal is parallel to <b>[${h}${k}${l}]</b>. The separate Miller direction is controlled only by `+
+   `<b>[uvw]</b>. Interplanar spacing is `+
    `<b>d<sub>hkl</sub> = a / √(h²+k²+l²)</b> = <b>a/${Math.sqrt(h*h+k*k+l*l).toFixed(3)}</b>.`;
 }
 function buildDirection(){
  clear(dirG);
+
+ /*
+  * MILLER PLANE DIRECTION:
+  * For a cubic crystal, the normal to the plane (hkl) is parallel to [hkl].
+  * Therefore the checkbox deliberately derives the direction from the
+  * CURRENT MILLER PLANE indices; it does not use the arbitrary [uvw] fields.
+  *
+  * We reduce (hkl) first, so (2 2 2) produces the same direction [1 1 1].
+  * Negative Miller indices are preserved, e.g. (1 -1 0) -> [1 -1 0].
+  */
  if(!document.getElementById('directionToggle').checked)return;
- const u=+document.getElementById('u').value||0,v=+document.getElementById('v').value||0,w=+document.getElementById('w').value||0;
- if(!(u||v||w))return;
- const b=cellBounds(),origin=new THREE.Vector3(b.min,b.min,b.min);
- const d=new THREE.Vector3(u,v,w);d.normalize();
- const len=A*.82;
- dirG.add(new THREE.ArrowHelper(d,origin,len,0xffa63d,.20,.11));
- const lab=txt(`[${u}${v}${w}]`,'#ffd9a8',.34);lab.position.copy(origin).add(d.clone().multiplyScalar(len*1.10));dirG.add(lab);
+
+ let h=Math.trunc(+document.getElementById('h').value||0);
+ let k=Math.trunc(+document.getElementById('k').value||0);
+ let l=Math.trunc(+document.getElementById('l').value||0);
+ if(h===0&&k===0&&l===0)return;
+
+ [h,k,l]=reduceIndices(h,k,l);
+
+ const b=cellBounds();
+ const origin=new THREE.Vector3(b.min,b.min,b.min);
+ const d=new THREE.Vector3(h,k,l).normalize();
+ const len=A*.95;
+
+ // Solid, high-visibility arrow: cylindrical shaft + solid cone.
+ const shaftR=A*.030;
+ const headR=A*.095;
+ const headLen=Math.min(A*.24,len*.30);
+ const shaftLen=len-headLen;
+
+ const arrowG=new THREE.Group();
+
+ const shaft=new THREE.Mesh(
+  new THREE.CylinderGeometry(shaftR,shaftR,shaftLen,12),
+  new THREE.MeshBasicMaterial({color:0xff8a00,transparent:false,depthTest:false})
+ );
+ shaft.position.copy(origin).add(d.clone().multiplyScalar(shaftLen/2));
+ shaft.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);
+ arrowG.add(shaft);
+
+ const head=new THREE.Mesh(
+  new THREE.ConeGeometry(headR,headLen,16),
+  new THREE.MeshBasicMaterial({color:0xffa63d,transparent:false,depthTest:false})
+ );
+ head.position.copy(origin).add(d.clone().multiplyScalar(shaftLen+headLen/2));
+ head.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);
+ arrowG.add(head);
+
+ // A short dark outline-like second cone behind the head improves contrast
+ // against both dark background and bright lattice atoms.
+ const headTip=origin.clone().add(d.clone().multiplyScalar(len));
+ const tipMarker=new THREE.Mesh(
+  new THREE.SphereGeometry(A*.045,12,8),
+  new THREE.MeshBasicMaterial({color:0xffd166,transparent:false,depthTest:false})
+ );
+ tipMarker.position.copy(headTip);
+ arrowG.add(tipMarker);
+
+ dirG.add(arrowG);
+
+ const lab=txt('['+h+','+k+','+l+']','#ffd166',.38);
+ lab.position.copy(origin).add(d.clone().multiplyScalar(len*1.10));
+ dirG.add(lab);
 }
+
 function structureInfo(){
  const d={
   sc:{name:'Simple Cubic (SC)',atoms:1,coord:6,apf:'0.524'},
@@ -539,16 +896,37 @@ function structureInfo(){
 function update(){
  N=+document.getElementById('n').value;
  document.getElementById('nVal').textContent=`${N} × ${N} × ${N}`;
- document.getElementById('atomVal').textContent=(+document.getElementById('atomSize').value).toFixed(3);
+ const atomFraction=Math.max(.20,Math.min(1,+document.getElementById('atomSize').value||.75));
+ const radiusOverA=(nearestNeighbourDistance(structure)/A)*.5*atomFraction;
+ document.getElementById('atomVal').textContent=
+  `${Math.round(atomFraction*100)}% (r/a = ${radiusOverA.toFixed(3)})`;
  document.getElementById('planeVal').textContent=(+document.getElementById('planeOpacity').value).toFixed(2);
  document.getElementById('neighborVal').textContent=(+document.getElementById('neighborOpacity').value).toFixed(2);
  buildCrystal();buildUnitCell();buildPlane();buildDirection();
+ if(userDirectionShown){
+  clear(userDirG);
+  userDirectionShown=false;
+  const db=document.getElementById('directionBtn');
+  if(db)db.textContent='Show [uvw] direction';
+ }
+ userDirG.visible=true;
  atomG.visible=document.getElementById('atoms').checked;
  edgeG.visible=document.getElementById('edges').checked;
  cellG.visible=document.getElementById('cell').checked;
  neighborG.visible=document.getElementById('neighbors').checked;
  interceptG.visible=document.getElementById('intercepts').checked;
  structureInfo();
+
+ const nn=document.getElementById('neighbors');
+ const learning=document.getElementById('learning');
+ if(nn.checked){
+  const nnText={
+   sc:'Nearest-neighbour mode: one corner atom of the highlighted SC cell is selected; only its 6 nearest-neighbour bonds are shown.',
+   bcc:'Nearest-neighbour mode: the body-centred atom of the highlighted BCC cell is selected; only its 8 nearest-neighbour bonds are shown.',
+   fcc:'Nearest-neighbour mode: one face-centred atom of the highlighted FCC cell is selected; only its 12 nearest-neighbour bonds are shown.'
+  }[structure];
+  learning.innerHTML=nnText;
+ }
 }
 function setView(kind){
  const dist=Math.max(10,N*A*1.55);
@@ -571,7 +949,45 @@ document.querySelectorAll('[data-plane]').forEach(b=>b.onclick=()=>{
 });
 document.getElementById('latticeMode').onclick=()=>{isolate=false;document.getElementById('latticeMode').classList.add('active');document.getElementById('isolateMode').classList.remove('active');update()};
 document.getElementById('isolateMode').onclick=()=>{isolate=true;document.getElementById('isolateMode').classList.add('active');document.getElementById('latticeMode').classList.remove('active');update()};
-document.getElementById('directionBtn').onclick=()=>{const c=document.getElementById('directionToggle');c.checked=!c.checked;update()};
+let userDirectionShown=false;
+
+document.getElementById('directionBtn').onclick=()=>{
+ const btn=document.getElementById('directionBtn');
+
+ // Second click: remove the previously drawn arbitrary [uvw] direction.
+ if(userDirectionShown){
+  clear(userDirG);
+  userDirectionShown=false;
+  btn.textContent='Show [uvw] direction';
+  return;
+ }
+
+ const u=Math.trunc(+document.getElementById('u').value||0);
+ const v=Math.trunc(+document.getElementById('v').value||0);
+ const w=Math.trunc(+document.getElementById('w').value||0);
+
+ if(!(u||v||w)){
+  clear(userDirG);
+  userDirectionShown=false;
+  btn.textContent='Show [uvw] direction';
+  return;
+ }
+
+ clear(userDirG);
+
+ const b=cellBounds();
+ const origin=new THREE.Vector3(b.min,b.min,b.min);
+ const d=new THREE.Vector3(u,v,w).normalize();
+ const len=A*.82;
+ userDirG.add(new THREE.ArrowHelper(d,origin,len,0xffa63d,.20,.11));
+
+ const lab=txt('['+u+','+v+','+w+']','#ffd9a8',.34);
+ lab.position.copy(origin).add(d.clone().multiplyScalar(len*1.10));
+ userDirG.add(lab);
+
+ userDirectionShown=true;
+ btn.textContent='Hide [uvw] direction';
+};
 document.getElementById('reset').onclick=()=>setView('iso');
 document.getElementById('isoPreset').onclick=()=>setView('iso');
 document.getElementById('topPreset').onclick=()=>setView('top');
@@ -582,11 +998,156 @@ document.getElementById('front2').onclick=()=>setView('front');
 document.getElementById('focusCell').onclick=()=>setView('cell');
 document.getElementById('full').onclick=()=>document.documentElement.requestFullscreen?.();
 
+/* Mobile side drawers: obvious edge tabs + reliable sideways sliding. */
+const leftPanel=document.getElementById('left');
+const rightPanel=document.getElementById('right');
+const leftHandle=document.getElementById('leftHandle');
+const rightHandle=document.getElementById('rightHandle');
+const mobileControlsToggle=document.getElementById('mobileControlsToggle');
+
+function syncHideButton(){
+  if(!mobileControlsToggle)return;
+  const hidden=leftPanel.classList.contains('mobile-controls-hidden');
+  mobileControlsToggle.textContent=hidden?'Show controls ▼':'Hide controls ▲';
+  mobileControlsToggle.setAttribute('aria-expanded',String(!hidden));
+}
+
+mobileControlsToggle?.addEventListener('click',()=>{
+  const hidden=leftPanel.classList.toggle('mobile-controls-hidden');
+  /* Keep the panel state and the edge tab synchronized. */
+  if(hidden){
+    leftPanel.style.transform='';
+    leftPanel.classList.add('mobile-closed');
+  }else{
+    leftPanel.classList.remove('mobile-closed');
+  }
+  syncHideButton();
+  setTimeout(updateDrawerPositions,20);
+});
+
+function drawerWidth(panel){
+  return Math.min(innerWidth <= 430 ? innerWidth*.86 : innerWidth*.84,
+                  innerWidth <= 430 ? 320 : 340);
+}
+
+function setDrawer(panel,handle,open,isLeft){
+  panel.style.transition='';
+  panel.style.transform='';
+  panel.classList.toggle('mobile-closed',!open);
+  if(panel===leftPanel)panel.classList.toggle('mobile-controls-hidden',!open);
+  handle.classList.toggle('drawer-open',open);
+  handle.setAttribute('aria-expanded',String(open));
+  if(panel===leftPanel)syncHideButton();
+
+  /* Open panel: tab is at the panel's outside edge.
+     Closed panel: tab is fixed at the screen edge. */
+  if(isLeft){
+    handle.style.left=open ? `${drawerWidth(panel)+8}px` : '0px';
+    handle.style.right='';
+    handle.querySelector('span').textContent=open?'‹':'›';
+  }else{
+    handle.style.right=open ? `${drawerWidth(panel)+8}px` : '0px';
+    handle.style.left='';
+    handle.querySelector('span').textContent=open?'›':'‹';
+  }
+}
+
+function toggleDrawer(panel,handle,isLeft){
+  setDrawer(panel,handle,panel.classList.contains('mobile-closed'),isLeft);
+}
+
+leftHandle.addEventListener('click',()=>toggleDrawer(leftPanel,leftHandle,true));
+rightHandle.addEventListener('click',()=>toggleDrawer(rightPanel,rightHandle,false));
+
+function makeDrawerSwipe(panel,handle,isLeft){
+  let down=false,startX=0,startY=0,moved=false;
+
+  handle.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse' && e.button!==0)return;
+    down=true;moved=false;startX=e.clientX;startY=e.clientY;
+    handle.setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+  });
+
+  handle.addEventListener('pointermove',e=>{
+    if(!down)return;
+    const dx=e.clientX-startX,dy=e.clientY-startY;
+    if(Math.abs(dx)<7 || Math.abs(dx)<=Math.abs(dy))return;
+    moved=true;
+
+    const W=Math.max(drawerWidth(panel),1);
+    const open=!panel.classList.contains('mobile-closed');
+
+    if(isLeft){
+      let x=open ? Math.max(-W,Math.min(0,dx)) : Math.max(-W,Math.min(0,dx-W));
+      panel.style.transition='none';
+      panel.style.transform=`translateX(${x}px)`;
+    }else{
+      let x=open ? Math.min(W,Math.max(0,-dx)) : Math.min(W,Math.max(0,W+dx));
+      panel.style.transition='none';
+      panel.style.transform=`translateX(${x}px)`;
+    }
+  });
+
+  handle.addEventListener('pointerup',e=>{
+    if(!down)return;
+    down=false;
+    handle.releasePointerCapture?.(e.pointerId);
+    panel.style.transition='';
+
+    if(!moved){
+      toggleDrawer(panel,handle,isLeft);
+      return;
+    }
+
+    const W=Math.max(drawerWidth(panel),1);
+    const rect=panel.getBoundingClientRect();
+    const visible=isLeft ? Math.max(0,rect.right) : Math.max(0,innerWidth-rect.left);
+    setDrawer(panel,handle,visible > W*.48,isLeft);
+  });
+
+  handle.addEventListener('pointercancel',()=>{
+    down=false;
+    setDrawer(panel,handle,!panel.classList.contains('mobile-closed'),isLeft);
+  });
+}
+
+makeDrawerSwipe(leftPanel,leftHandle,true);
+makeDrawerSwipe(rightPanel,rightHandle,false);
+
+function updateDrawerPositions(){
+  if(innerWidth<=760){
+    setDrawer(leftPanel,leftHandle,!leftPanel.classList.contains('mobile-closed'),true);
+    setDrawer(rightPanel,rightHandle,!rightPanel.classList.contains('mobile-closed'),false);
+  }
+}
+
+
+if(innerWidth<=760){
+  setDrawer(leftPanel,leftHandle,true,true);
+  setDrawer(rightPanel,rightHandle,false,false);
+  syncHideButton();
+}
+
 update();setView('iso');
 
 function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
 animate();
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+  if(innerWidth>760){
+    leftPanel.classList.remove('mobile-closed');
+    rightPanel.classList.remove('mobile-closed');
+    leftPanel.style.transform='';
+    rightPanel.style.transform='';
+    leftHandle.style.left='';
+    rightHandle.style.right='';
+  }else{
+    updateDrawerPositions();
+  }
+});
 </script>
 </body>
 </html>
