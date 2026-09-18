@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3D Solid State Physics Explorer — Accurate Miller Planes</title>
+<style>
+:root{
+  --bg:#06111f;--panel:#0b1a2b;--panel2:#10243a;--line:#2b4662;
+  --text:#eef7ff;--muted:#9fb4ca;--blue:#169aff;--green:#2ee38a;
+  --yellow:#ffd735;--red:#ff6373;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+font-family:Inter,Segoe UI,system-ui,-apple-system,sans-serif}
+canvas{display:block}
+button,select,input[type=number]{
+  color:var(--text);background:#10263d;border:1px solid #34516e;border-radius:8px;
+  padding:8px 10px;font-weight:600
+}
+button{cursor:pointer}button:hover{background:#173753}
+button.active{background:#087fdf;border-color:#65c1ff}
+#top{
+ position:fixed;z-index:10;left:17px;right:17px;top:13px;display:flex;justify-content:space-between;align-items:center;
+ pointer-events:none
+}
+.brand{pointer-events:auto}.brand h1{font-size:21px;margin:0}.brand p{font-size:12px;color:var(--muted);margin:3px 0 0}
+.topBtns{display:flex;gap:7px;pointer-events:auto}
+#left,#right{
+ position:fixed;z-index:9;top:82px;bottom:15px;width:292px;overflow:auto;
+ padding:14px;background:rgba(8,23,40,.95);border:1px solid var(--line);border-radius:15px;
+ backdrop-filter:blur(10px);box-shadow:0 16px 50px #0007
+}
+#left{left:15px}#right{right:15px}
+.section{border-top:1px solid #223a53;padding-top:12px;margin-top:12px}
+.sectionTitle{font-size:11px;color:#bdd1e5;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.small{font-size:11px;color:var(--muted);line-height:1.48}
+select{width:100%;appearance:auto}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+input[type=number]{width:100%;min-width:0}
+input[type=range]{width:100%;accent-color:var(--blue)}
+.rangeVal{float:right;color:#c4d9ec}
+.toggle{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:12px;color:#dce9f5}
+input[type=checkbox]{accent-color:var(--blue)}
+.mode{width:100%;text-align:left;margin-bottom:7px;padding:10px}
+.presetGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.badge{display:inline-block;margin-top:8px;padding:4px 7px;border-radius:999px;background:#142b42;border:1px solid #31506d;color:#b9d4e9;font-size:10px}
+#info{
+ position:fixed;z-index:8;left:50%;bottom:14px;transform:translateX(-50%);
+ width:min(700px,calc(100vw - 650px));min-width:410px;padding:11px 15px;text-align:center;
+ background:rgba(7,19,33,.93);border:1px solid #2d4862;border-radius:12px;pointer-events:none
+}
+#infoTitle{font-weight:800;font-size:13px}.infoText{font-size:11px;color:#a9bed2;margin-top:3px}
+#hint{position:fixed;z-index:8;top:70px;left:50%;transform:translateX(-50%);font-size:10px;color:#95adc3;
+background:#071625dc;padding:5px 10px;border-radius:999px;border:1px solid #223b54}
+#planeCard,#structureCard{
+ padding:9px;border:1px solid #29445f;background:#081827;border-radius:9px;margin-top:8px
+}
+#planeCard b,#structureCard b{color:#e9f6ff}
+.formula{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#bfe5ff;font-size:11px;
+margin-top:6px;line-height:1.55}
+@media(max-width:900px){#left,#right{width:250px}.brand p{display:none}#info{display:none}}
+@media(max-width:650px){#right{display:none}#left{width:278px;top:63px}.topBtns{display:none}}
+</style>
+</head>
+<body>
+
+<div id="top">
+ <div class="brand">
+   <h1>3D Solid State Physics Explorer</h1>
+   <p>Accurate cubic unit cells • Miller planes • Miller directions • lattice context</p>
+ </div>
+ <div class="topBtns">
+   <button id="isoPreset" class="active">Isometric</button>
+   <button id="topPreset">Top</button>
+   <button id="frontPreset">Front</button>
+   <button id="reset">Reset</button>
+   <button id="full">Fullscreen</button>
+ </div>
+</div>
+
+<div id="left">
+ <div class="section" style="margin-top:0;padding-top:0;border-top:0">
+  <div class="sectionTitle">Crystal structure</div>
+  <select id="structure">
+   <option value="sc">Simple Cubic (SC)</option>
+   <option value="bcc">Body-Centered Cubic (BCC)</option>
+   <option value="fcc" selected>Face-Centered Cubic (FCC)</option>
+  </select>
+  <span class="badge">Miller (hkl) geometry shown for cubic cells</span>
+ </div>
+
+ <div class="section">
+  <div class="sectionTitle">Lattice size</div>
+  <input id="n" type="range" min="1" max="5" step="1" value="3">
+  <div class="small">Replicated cells: <b id="nVal">3 × 3 × 3</b></div>
+ </div>
+
+ <div class="section">
+  <div class="sectionTitle">View mode</div>
+  <button id="latticeMode" class="mode active">▦ Show lattice + highlighted cell</button>
+  <button id="isolateMode" class="mode">□ Isolate highlighted unit cell</button>
+ </div>
+
+ <div class="section">
+  <div class="sectionTitle">Show / hide</div>
+  <label class="toggle"><input id="atoms" type="checkbox" checked> Atoms</label>
+  <label class="toggle"><input id="edges" type="checkbox" checked> Lattice edges</label>
+  <label class="toggle"><input id="cell" type="checkbox" checked> Highlight unit cell</label>
+  <label class="toggle"><input id="intercepts" type="checkbox" checked> Plane intercept points</label>
+  <label class="toggle"><input id="neighbors" type="checkbox"> Nearest neighbours</label>
+  <label class="toggle"><input id="axes" type="checkbox" checked> Axes</label>
+  <label class="toggle"><input id="planeToggle" type="checkbox" checked> Miller plane</label>
+  <label class="toggle"><input id="directionToggle" type="checkbox"> Miller direction</label>
+ </div>
+
+ <div class="section">
+  <div class="sectionTitle">Miller plane (h k l)</div>
+  <div class="row3">
+   <input id="h" type="number" value="1" step="1" aria-label="h">
+   <input id="k" type="number" value="1" step="1" aria-label="k">
+   <input id="l" type="number" value="1" step="1" aria-label="l">
+  </div>
+  <div class="presetGrid" style="margin-top:7px">
+   <button data-plane="100">(100)</button><button data-plane="110">(110)</button>
+   <button data-plane="111">(111)</button><button data-plane="210">(210)</button>
+  </div>
+  <div id="planeCard">
+   <div id="planeSummary">Plane: <b>(111)</b></div>
+   <div id="planeDetails" class="small"></div>
+   <div id="planeEquation" class="formula"></div>
+  </div>
+ </div>
+
+ <div class="section">
+  <div class="sectionTitle">Miller direction [u v w]</div>
+  <div class="row3">
+   <input id="u" type="number" value="1" step="1">
+   <input id="v" type="number" value="1" step="1">
+   <input id="w" type="number" value="0" step="1">
+  </div>
+  <button id="directionBtn" style="width:100%;margin-top:7px">Show direction</button>
+ </div>
+</div>
+
+<div id="right">
+ <div class="section" style="border-top:0;margin-top:0;padding-top:0">
+  <div class="sectionTitle">Appearance</div>
+  <div class="small">Atom size <span id="atomVal" class="rangeVal">0.110</span></div>
+  <input id="atomSize" type="range" min=".045" max=".15" value=".095" step=".005">
+  <div class="small">Plane opacity <span id="planeVal" class="rangeVal">0.42</span></div>
+  <input id="planeOpacity" type="range" min=".15" max=".75" value=".42" step=".01">
+  <div class="small">Neighbour-cell opacity <span id="neighborVal" class="rangeVal">0.20</span></div>
+  <input id="neighborOpacity" type="range" min=".04" max=".45" value=".20" step=".01">
+ </div>
+
+ <div class="section">
+  <div class="sectionTitle">Legend</div>
+  <div class="small">
+   <div style="margin:7px 0">🔵 Atom / lattice point</div>
+   <div style="margin:7px 0">━ <span style="color:#90a8c0">Lattice edge</span></div>
+   <div style="margin:7px 0">━ <span style="color:#ffd735">Highlighted unit-cell edge</span></div>
+   <div style="margin:7px 0">■ <span style="color:#b37bff">Miller plane (hkl)</span></div>
+   <div style="margin:7px 0">✚ <span style="color:#ffff66">Plane intercept marker (not an atom)</span></div>
+   <div style="margin:7px 0">➜ <span style="color:#ffa63d">Miller direction [uvw]</span></div>
+   <div style="margin:7px 0">➜ <span style="color:#ffffff">Plane normal n</span></div>
+   <div style="margin:7px 0">━ <span style="color:#ff8e9d">x</span> / <span style="color:#8af2b0">y</span> / <span style="color:#82c2ff">z</span> crystal axes</div>
+  </div>
+ </div>
+
+ <div class="section">
+  <div class="sectionTitle">Structure information</div>
+  <div id="structureCard" class="small"></div>
+ </div>
+
+ <div class="section">
+  <div class="sectionTitle">Learning note</div>
+  <div id="learning" class="small">
+   A Miller index specifies the orientation of a family of equally spaced parallel lattice planes.
+   The highlighted member is chosen so it intersects the displayed unit cell.
+  </div>
+ </div>
+
+ <div class="section">
+  <div class="sectionTitle">View presets</div>
+  <div class="presetGrid">
+   <button id="iso2" class="active">Isometric</button><button id="top2">Top</button>
+   <button id="front2">Front</button><button id="focusCell">Focus cell</button>
+  </div>
+ </div>
+</div>
+
+<div id="hint">Drag = rotate • Wheel = zoom • Right-drag = pan</div>
+<div id="info">
+ <div id="infoTitle">FCC • 3 × 3 × 3 lattice • highlighted central unit cell</div>
+ <div class="infoText" id="infoText">The yellow box identifies one conventional unit cell within the larger crystal.</div>
+</div>
+
+<script type="importmap">
+{"imports":{
+ "three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+ "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x06111f);
+
+const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,150);
+camera.position.set(10.5,8.5,11.5);
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.08;
+document.body.appendChild(renderer.domElement);
+
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=.075;controls.target.set(0,0,0);
+
+scene.add(new THREE.HemisphereLight(0xd9ecff,0x142236,1.7));
+const key=new THREE.DirectionalLight(0xffffff,2.25);key.position.set(6,9,7);scene.add(key);
+const fill=new THREE.DirectionalLight(0x74b9ff,.7);fill.position.set(-5,3,-5);scene.add(fill);
+
+const atomG=new THREE.Group(),edgeG=new THREE.Group(),cellG=new THREE.Group(),planeG=new THREE.Group();
+const dirG=new THREE.Group(),axisG=new THREE.Group(),neighborG=new THREE.Group(),interceptG=new THREE.Group();
+scene.add(atomG,edgeG,cellG,planeG,dirG,axisG,neighborG,interceptG);
+
+const A=2.8;
+let structure='fcc',N=3,isolate=false;
+
+function clear(g){
+ while(g.children.length){
+  const o=g.children.pop();
+  o.traverse(x=>{
+   if(x.geometry)x.geometry.dispose();
+   if(x.material){if(x.material.map)x.material.map.dispose();x.material.dispose();}
+  });
+ }
+}
+function line(a,b,color,opacity=.7){
+ const geo=new THREE.BufferGeometry().setFromPoints([a,b]);
+ return new THREE.Line(geo,new THREE.LineBasicMaterial({color,transparent:true,opacity}));
+}
+function atom(pos,r,color,opacity=1){
+ const m=new THREE.MeshStandardMaterial({color,roughness:.24,metalness:.03,transparent:opacity<1,opacity});
+ const s=new THREE.Mesh(new THREE.SphereGeometry(r,28,20),m);s.position.copy(pos);s.userData.base=pos.clone();return s;
+}
+function txt(text,color='#ffffff',size=.30){
+ const c=document.createElement('canvas');c.width=640;c.height=160;
+ const x=c.getContext('2d');x.font='700 48px system-ui';x.fillStyle=color;x.textAlign='center';x.textBaseline='middle';x.fillText(text,320,80);
+ const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
+ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false}));
+ s.scale.set(size*4,size,1);return s;
+}
+function structureSites(type){
+ const c=[[0,0,0],[1,0,0],[0,1,0],[1,1,0],[0,0,1],[1,0,1],[0,1,1],[1,1,1]];
+ if(type==='sc')return c;
+ if(type==='bcc')return c.concat([[.5,.5,.5]]);
+ return c.concat([
+  [.5,.5,0],[.5,.5,1],[.5,0,.5],[.5,1,.5],[0,.5,.5],[1,.5,.5]
+ ]);
+}
+function cellIndex(){return Math.floor((N-1)/2)}
+function cellBounds(){
+ const i=cellIndex();
+ const min=(i-N/2)*A;
+ return {min,max:min+A,index:i};
+}
+function latticePointKey(x,y,z){return x.toFixed(5)+','+y.toFixed(5)+','+z.toFixed(5)}
+
+function buildCrystal(){
+ clear(atomG);clear(edgeG);clear(neighborG);
+ const idx=cellIndex(),center=(N-1)/2;
+ const sites=structureSites(structure);
+ const seen=new Set(),positions=[];
+ const cellAtoms=[];
+ for(let i=0;i<N;i++)for(let j=0;j<N;j++)for(let k=0;k<N;k++){
+  for(const s of sites){
+   const fx=i+s[0],fy=j+s[1],fz=k+s[2];
+   if(fx<0||fx>N||fy<0||fy>N||fz<0||fz>N)continue;
+   const key=latticePointKey(fx,fy,fz);
+   if(seen.has(key))continue;
+   seen.add(key);
+   const pos=new THREE.Vector3((fx-N/2)*A,(fy-N/2)*A,(fz-N/2)*A);
+   const inCell=fx>=idx-1e-6&&fx<=idx+1+1e-6&&fy>=idx-1e-6&&fy<=idx+1+1e-6&&fz>=idx-1e-6&&fz<=idx+1+1e-6;
+   const opacity=isolate?(inCell?1:.055):1;
+   let color=0x51b5ff;
+   if(structure==='bcc'&&s[0]===.5&&s[1]===.5&&s[2]===.5)color=0xffc857;
+   if(structure==='fcc' && !(s[0]===0&&s[1]===0&&s[2]===0) && 
+      !(s[0]===1&&s[1]===0&&s[2]===0) &&
+      !(s[0]===0&&s[1]===1&&s[2]===0) &&
+      !(s[0]===1&&s[1]===1&&s[2]===0) &&
+      !(s[0]===0&&s[1]===0&&s[2]===1) &&
+      !(s[0]===1&&s[1]===0&&s[2]===1) &&
+      !(s[0]===0&&s[1]===1&&s[2]===1) &&
+      !(s[0]===1&&s[1]===1&&s[2]===1)) color=0x63c4ff;
+   const m=atom(pos,A*+document.getElementById('atomSize').value,color,opacity);
+   atomG.add(m);if(opacity>.5)positions.push(pos);if(inCell)cellAtoms.push(pos);
+  }
+ }
+
+ // Draw all 12 edges for every cell.
+ const edgeOpacity=isolate?+document.getElementById('neighborOpacity').value*.7:.58;
+ for(let i=0;i<N;i++)for(let j=0;j<N;j++)for(let k=0;k<N;k++){
+  const o=new THREE.Vector3((i-N/2)*A,(j-N/2)*A,(k-N/2)*A);
+  const q=o.clone().addScalar(A);
+  const p=[
+   new THREE.Vector3(o.x,o.y,o.z),new THREE.Vector3(q.x,o.y,o.z),
+   new THREE.Vector3(q.x,q.y,o.z),new THREE.Vector3(o.x,q.y,o.z),
+   new THREE.Vector3(o.x,o.y,q.z),new THREE.Vector3(q.x,o.y,q.z),
+   new THREE.Vector3(q.x,q.y,q.z),new THREE.Vector3(o.x,q.y,q.z)
+  ];
+  const edges=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+  edges.forEach(([aa,bb])=>edgeG.add(line(p[aa],p[bb],0x718ea9,edgeOpacity)));
+ }
+
+ if(document.getElementById('neighbors').checked){
+  let minD=Infinity;
+  for(let i=0;i<positions.length;i++)for(let j=i+1;j<positions.length;j++){
+   const d=positions[i].distanceTo(positions[j]);if(d>1e-4)minD=Math.min(minD,d);
+  }
+  for(let i=0;i<positions.length;i++)for(let j=i+1;j<positions.length;j++){
+   const d=positions[i].distanceTo(positions[j]);
+   if(Math.abs(d-minD)<A*.035)neighborG.add(line(positions[i],positions[j],0xffd166,.45));
+  }
+ }
+}
+
+function buildUnitCell(){
+ clear(cellG);clear(axisG);
+ const b=cellBounds(),a=b.min,c=b.max;
+ const p=[
+  new THREE.Vector3(a,a,a),new THREE.Vector3(c,a,a),new THREE.Vector3(c,c,a),new THREE.Vector3(a,c,a),
+  new THREE.Vector3(a,a,c),new THREE.Vector3(c,a,c),new THREE.Vector3(c,c,c),new THREE.Vector3(a,c,c)
+ ];
+ const e=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+ if(document.getElementById('cell').checked){
+  e.forEach(([i,j])=>cellG.add(line(p[i],p[j],0xffd735,1)));
+  // faint transparent faces, purely to make the unit cell unmistakable
+  const faces=[[0,1,2,3],[4,5,6,7],[0,1,5,4],[2,3,7,6],[0,3,7,4],[1,2,6,5]];
+  faces.forEach(face=>{
+   const geo=new THREE.BufferGeometry();
+   const arr=[];
+   for(let t=1;t<face.length-1;t++)arr.push(p[face[0]],p[face[t]],p[face[t+1]]);
+   geo.setFromPoints(arr);
+   cellG.add(new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0xffd735,transparent:true,opacity:isolate?.045:.018,side:THREE.DoubleSide,depthWrite:false})));
+  });
+ }
+ if(document.getElementById('axes').checked){
+  const origin=p[0],len=A*.82;
+  axisG.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0),origin,len,0xff5c72,.18,.10));
+  axisG.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0),origin,len,0x34e58c,.18,.10));
+  axisG.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1),origin,len,0x409eff,.18,.10));
+  [['x',new THREE.Vector3(1,0,0),'#ff8e9d'],['y',new THREE.Vector3(0,1,0),'#8af2b0'],['z',new THREE.Vector3(0,0,1),'#82c2ff']]
+   .forEach(([t,d,c])=>{const s=txt(t,c,.32);s.position.copy(origin).add(d.multiplyScalar(len*1.13));axisG.add(s)});
+ }
+}
+
+function polygonArea(pts){
+ if(pts.length<3)return 0;
+ const c=pts.reduce((s,p)=>s.add(p),new THREE.Vector3()).multiplyScalar(1/pts.length);
+ const n=new THREE.Vector3();
+ for(let i=0;i<pts.length;i++){
+  const a=pts[i].clone().sub(c),b=pts[(i+1)%pts.length].clone().sub(c);
+  n.add(new THREE.Vector3().crossVectors(a,b));
+ }
+ return n.length()/2;
+}
+function planeClipLocal(h,k,l,D){
+ const a=A;
+ const corners=[
+  new THREE.Vector3(0,0,0),new THREE.Vector3(a,0,0),new THREE.Vector3(a,a,0),new THREE.Vector3(0,a,0),
+  new THREE.Vector3(0,0,a),new THREE.Vector3(a,0,a),new THREE.Vector3(a,a,a),new THREE.Vector3(0,a,a)
+ ];
+ const edges=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+ const f=p=>h*p.x/a+k*p.y/a+l*p.z/a-D;
+ const hits=[];
+ for(const [i,j] of edges){
+  const P=corners[i],Q=corners[j],fp=f(P),fq=f(Q);
+  if(Math.abs(fp)<1e-9)hits.push(P.clone());
+  if(fp*fq<0)hits.push(P.clone().lerp(Q,fp/(fp-fq)));
+ }
+ return hits.filter((p,i)=>hits.findIndex(q=>q.distanceTo(p)<1e-6)===i);
+}
+function choosePlaneMember(h,k,l){
+ // Miller planes form a parallel family. For an arbitrary signed index set,
+ // choose an integer member D that intersects the highlighted unit cell.
+ // This preserves orientation while making the visualization non-degenerate.
+ const vals=[0,h,k,l,h+k,h+l,k+l,h+k+l];
+ let lo=Math.min(...vals),hi=Math.max(...vals);
+ const candidates=[];
+ for(let D=Math.ceil(lo-1e-9);D<=Math.floor(hi+1e-9);D++){
+  const pts=planeClipLocal(h,k,l,D);if(pts.length>=3)candidates.push({D,pts,area:polygonArea(pts)});
+ }
+ if(!candidates.length)return null;
+ candidates.sort((a,b)=>b.area-a.area || Math.abs(a.D-1)-Math.abs(b.D-1));
+ return candidates[0];
+}
+function gcd3(a,b,c){
+ a=Math.abs(a);b=Math.abs(b);c=Math.abs(c);let g=Math.gcd?Math.gcd(a,b):0;
+ const gcd=(x,y)=>{while(y){const t=x%y;x=y;y=t}return x};
+ return gcd(gcd(a,b),c);
+}
+function reduceIndices(h,k,l){
+ const g=gcd3(h,k,l)||1;return [h/g,k/g,l/g];
+}
+function planeLabel(h,k,l){
+ const f=n=>n<0?Math.abs(n)+'̅':String(n);
+ return '('+f(h)+f(k)+f(l)+')';
+}
+function buildPlane(){
+ clear(planeG);clear(interceptG);
+ if(!document.getElementById('planeToggle').checked)return;
+ let h=Math.trunc(+document.getElementById('h').value||0),k=Math.trunc(+document.getElementById('k').value||0),l=Math.trunc(+document.getElementById('l').value||0);
+ if(h===0&&k===0&&l===0){document.getElementById('planeDetails').textContent='(000) is not a valid plane index.';return}
+ [h,k,l]=reduceIndices(h,k,l);
+ const result=choosePlaneMember(h,k,l);
+ const b=cellBounds();
+ if(!result){
+  document.getElementById('planeDetails').textContent='No non-degenerate member of this plane family intersects the highlighted cell.';
+  return;
+ }
+ const pts=result.pts.map(p=>p.add(new THREE.Vector3(b.min,b.min,b.min)));
+ const center=pts.reduce((s,p)=>s.add(p),new THREE.Vector3()).multiplyScalar(1/pts.length);
+ const normal=new THREE.Vector3(h,k,l).normalize();
+ let u=new THREE.Vector3().crossVectors(normal,new THREE.Vector3(0,1,0));
+ if(u.length()<.1)u=new THREE.Vector3().crossVectors(normal,new THREE.Vector3(1,0,0));
+ u.normalize();const v=new THREE.Vector3().crossVectors(normal,u).normalize();
+ pts.sort((P,Q)=>{
+  const a1=Math.atan2(P.clone().sub(center).dot(v),P.clone().sub(center).dot(u));
+  const a2=Math.atan2(Q.clone().sub(center).dot(v),Q.clone().sub(center).dot(u));return a1-a2;
+ });
+ const arr=[];for(let i=0;i<pts.length;i++)arr.push(center,pts[i],pts[(i+1)%pts.length]);
+ const geo=new THREE.BufferGeometry().setFromPoints(arr);
+ geo.computeVertexNormals();
+ const planeMat=new THREE.MeshStandardMaterial({
+  color:0xb37bff,emissive:0x5a2f99,emissiveIntensity:.35,roughness:.4,metalness:.05,
+  transparent:true,opacity:+document.getElementById('planeOpacity').value,
+  side:THREE.DoubleSide,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1
+ });
+ const planeMesh=new THREE.Mesh(geo,planeMat);
+ planeMesh.renderOrder=2;
+ planeG.add(planeMesh);
+ // plane outline — bright, crisp border so the polygon reads clearly against the plane fill
+ for(let i=0;i<pts.length;i++)planeG.add(line(pts[i],pts[(i+1)%pts.length],0xe8d1ff,1));
+ const tag=txt(planeLabel(h,k,l),'#e8d1ff',.36);
+ tag.position.copy(center).add(normal.clone().multiplyScalar(A*.12));
+ planeG.add(tag);
+ // normal vector — visually ties the plane's tilt to its [hkl] indices
+ planeG.add(new THREE.ArrowHelper(normal.clone(),center,A*.55,0xffffff,.13,.075));
+ const nTag=txt('n = ['+h+','+k+','+l+']','#ffffff',.24);
+ nTag.position.copy(center).add(normal.clone().multiplyScalar(A*.68));
+ planeG.add(nTag);
+
+ // Highlight exact axis intercept points of the standard member D=result.D.
+ if(document.getElementById('intercepts').checked){
+  const D=result.D;
+  const ints=[];
+  if(h)ints.push({p:new THREE.Vector3(b.min + (D/h)*A,b.min,b.min),name:`(${D/h},0,0)`});
+  if(k)ints.push({p:new THREE.Vector3(b.min,b.min + (D/k)*A,b.min),name:`(0,${D/k},0)`});
+  if(l)ints.push({p:new THREE.Vector3(b.min,b.min,b.min + (D/l)*A),name:`(0,0,${D/l})`});
+  const eps=1e-6;
+  const onCorner=v=>(Math.abs(v-b.min)<eps||Math.abs(v-b.max)<eps);
+  ints.forEach(({p,name})=>{
+   const inCell=p.x>=b.min-eps&&p.x<=b.max+eps&&p.y>=b.min-eps&&p.y<=b.max+eps&&p.z>=b.min-eps&&p.z<=b.max+eps;
+   if(!inCell)return;
+   const isCubeCorner=onCorner(p.x)&&onCorner(p.y)&&onCorner(p.z);
+   // Geometric intercept marker only.
+   // No sphere and no circular highlight: a small 3D cross marks the intercept.
+   const s=A*.055;
+   const crossMat=new THREE.LineBasicMaterial({
+    color:0xffff66,transparent:true,opacity:1
+   });
+   const crossAxes=[
+    [new THREE.Vector3(-s,0,0),new THREE.Vector3(s,0,0)],
+    [new THREE.Vector3(0,-s,0),new THREE.Vector3(0,s,0)],
+    [new THREE.Vector3(0,0,-s),new THREE.Vector3(0,0,s)]
+   ];
+   for(const [a1,b1] of crossAxes){
+    const geo=new THREE.BufferGeometry().setFromPoints([
+     p.clone().add(a1),p.clone().add(b1)
+    ]);
+    interceptG.add(new THREE.Line(geo,crossMat));
+   }
+
+   const lab=txt(name,'#ffe978',.25);
+   lab.position.copy(p).add(new THREE.Vector3(.08,.10,.08));
+   interceptG.add(lab);
+  });
+ }
+
+ const standard=`${h}x + ${k}y + ${l}z = ${result.D}a`;
+ document.getElementById('planeSummary').innerHTML=`Plane: <b>${planeLabel(h,k,l)}</b>`;
+ let details=`Normal direction: <b>[${h}${k}${l}]</b><br>Representative family member: <b>n = ${result.D}</b><br>`;
+ details+=`Intercepts of this member: `;
+ const arrI=[];if(h)arrI.push(`x = ${result.D}a/${h}`);if(k)arrI.push(`y = ${result.D}a/${k}`);if(l)arrI.push(`z = ${result.D}a/${l}`);
+ details+=arrI.join(', ');
+ if(result.D!==1)details+=`<br><span style="color:#d6b9bd">A translated parallel member was used so the plane is visible inside this unit cell.</span>`;
+ document.getElementById('planeDetails').innerHTML=details;
+ document.getElementById('planeEquation').textContent=standard;
+ document.getElementById('learning').innerHTML=
+   `For a cubic lattice, <b>${planeLabel(h,k,l)}</b> is a family of parallel planes whose normal is parallel to `+
+   `<b>[${h}${k}${l}]</b>. Interplanar spacing for the reduced indices is `+
+   `<b>d<sub>hkl</sub> = a / √(h²+k²+l²)</b> = <b>a/${Math.sqrt(h*h+k*k+l*l).toFixed(3)}</b>.`;
+}
+function buildDirection(){
+ clear(dirG);
+ if(!document.getElementById('directionToggle').checked)return;
+ const u=+document.getElementById('u').value||0,v=+document.getElementById('v').value||0,w=+document.getElementById('w').value||0;
+ if(!(u||v||w))return;
+ const b=cellBounds(),origin=new THREE.Vector3(b.min,b.min,b.min);
+ const d=new THREE.Vector3(u,v,w);d.normalize();
+ const len=A*.82;
+ dirG.add(new THREE.ArrowHelper(d,origin,len,0xffa63d,.20,.11));
+ const lab=txt(`[${u}${v}${w}]`,'#ffd9a8',.34);lab.position.copy(origin).add(d.clone().multiplyScalar(len*1.10));dirG.add(lab);
+}
+function structureInfo(){
+ const d={
+  sc:{name:'Simple Cubic (SC)',atoms:1,coord:6,apf:'0.524'},
+  bcc:{name:'Body-Centered Cubic (BCC)',atoms:2,coord:8,apf:'0.680'},
+  fcc:{name:'Face-Centered Cubic (FCC)',atoms:4,coord:12,apf:'0.740'}
+ }[structure];
+ document.getElementById('structureCard').innerHTML=
+  `<b>${d.name}</b><br>Atoms / unit cell: <b>${d.atoms}</b><br>Coordination number: <b>${d.coord}</b>`+
+  `<br>Atomic packing factor: <b>${d.apf}</b><br>Yellow box = one conventional unit cell.`;
+ document.getElementById('infoTitle').textContent=`${d.name} • ${N} × ${N} × ${N} cells • ${isolate?'isolated unit cell':'lattice context'}`;
+ document.getElementById('infoText').textContent=isolate?
+  'Neighbouring atoms and edges are faded; the highlighted yellow cell remains explicit.':
+  'The yellow box identifies one conventional unit cell inside the larger crystal.';
+}
+function update(){
+ N=+document.getElementById('n').value;
+ document.getElementById('nVal').textContent=`${N} × ${N} × ${N}`;
+ document.getElementById('atomVal').textContent=(+document.getElementById('atomSize').value).toFixed(3);
+ document.getElementById('planeVal').textContent=(+document.getElementById('planeOpacity').value).toFixed(2);
+ document.getElementById('neighborVal').textContent=(+document.getElementById('neighborOpacity').value).toFixed(2);
+ buildCrystal();buildUnitCell();buildPlane();buildDirection();
+ atomG.visible=document.getElementById('atoms').checked;
+ edgeG.visible=document.getElementById('edges').checked;
+ cellG.visible=document.getElementById('cell').checked;
+ neighborG.visible=document.getElementById('neighbors').checked;
+ interceptG.visible=document.getElementById('intercepts').checked;
+ structureInfo();
+}
+function setView(kind){
+ const dist=Math.max(10,N*A*1.55);
+ if(kind==='iso')camera.position.set(dist*.82,dist*.68,dist*.93);
+ if(kind==='top')camera.position.set(0,dist*1.1,.001);
+ if(kind==='front')camera.position.set(0,.001,dist*1.1);
+ if(kind==='cell'){
+  const b=cellBounds(),c=new THREE.Vector3((b.min+b.max)/2,(b.min+b.max)/2,(b.min+b.max)/2);
+  camera.position.copy(c).add(new THREE.Vector3(A*2.1,A*1.7,A*2.3));controls.target.copy(c);
+ }else controls.target.set(0,0,0);
+ controls.update();
+}
+document.getElementById('structure').onchange=e=>{structure=e.target.value;update()};
+document.getElementById('n').oninput=update;
+['atoms','edges','cell','intercepts','neighbors','axes','planeToggle','directionToggle','atomSize','planeOpacity','neighborOpacity',
+ 'h','k','l','u','v','w'].forEach(id=>document.getElementById(id).oninput=update);
+
+document.querySelectorAll('[data-plane]').forEach(b=>b.onclick=()=>{
+ const s=b.dataset.plane;['h','k','l'].forEach((id,i)=>document.getElementById(id).value=s[i]);update();
+});
+document.getElementById('latticeMode').onclick=()=>{isolate=false;document.getElementById('latticeMode').classList.add('active');document.getElementById('isolateMode').classList.remove('active');update()};
+document.getElementById('isolateMode').onclick=()=>{isolate=true;document.getElementById('isolateMode').classList.add('active');document.getElementById('latticeMode').classList.remove('active');update()};
+document.getElementById('directionBtn').onclick=()=>{const c=document.getElementById('directionToggle');c.checked=!c.checked;update()};
+document.getElementById('reset').onclick=()=>setView('iso');
+document.getElementById('isoPreset').onclick=()=>setView('iso');
+document.getElementById('topPreset').onclick=()=>setView('top');
+document.getElementById('frontPreset').onclick=()=>setView('front');
+document.getElementById('iso2').onclick=()=>setView('iso');
+document.getElementById('top2').onclick=()=>setView('top');
+document.getElementById('front2').onclick=()=>setView('front');
+document.getElementById('focusCell').onclick=()=>setView('cell');
+document.getElementById('full').onclick=()=>document.documentElement.requestFullscreen?.();
+
+update();setView('iso');
+
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
+animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script>
+</body>
+</html>
